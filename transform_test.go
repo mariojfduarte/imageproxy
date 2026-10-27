@@ -488,7 +488,7 @@ func TestApplyWatermark(t *testing.T) {
 	base := newImage(100, 100, red)
 	wm := newImage(10, 10, blue)
 
-	got := transformImage(base, Options{WatermarkPos: "se", WatermarkOpacity: 1, WatermarkScale: 0.1}, wm)
+	got := transformImage(base, Options{WatermarkPos: "se", WatermarkOpacity: f64(1), WatermarkScale: f64(0.1)}, wm)
 	if got.Bounds().Dx() != 100 || got.Bounds().Dy() != 100 {
 		t.Fatalf("expected output size 100x100, got %vx%v", got.Bounds().Dx(), got.Bounds().Dy())
 	}
@@ -497,8 +497,17 @@ func TestApplyWatermark(t *testing.T) {
 		t.Fatal("expected watermarked image to differ from base")
 	}
 
-	center := transformImage(base, Options{WatermarkPos: "c", WatermarkOpacity: 1, WatermarkScale: 0.1}, wm)
+	center := transformImage(base, Options{WatermarkPos: "c", WatermarkOpacity: f64(1), WatermarkScale: f64(0.1)}, wm)
 	if reflect.DeepEqual(center, got) {
 		t.Fatal("expected center and se watermark positions to produce different images")
+	}
+
+	transparent := transformImage(base, Options{WatermarkOpacity: f64(0), WatermarkScale: f64(0.1)}, wm)
+	if transparent.At(99, 99) != base.At(99, 99) {
+		t.Fatal("expected zero opacity to leave the base pixel unchanged")
+	}
+	absent := transformImage(base, Options{WatermarkScale: f64(0)}, wm)
+	if !reflect.DeepEqual(absent, base) {
+		t.Fatal("expected zero scale to leave the base image unchanged")
 	}
 }

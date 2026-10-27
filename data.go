@@ -105,12 +105,13 @@ type Options struct {
 	// WatermarkPos is the overlay anchor: nw, n, ne, w, c, e, sw, s, se.
 	WatermarkPos string
 
-	// WatermarkOpacity is overlay opacity in [0,1]. Zero means unset (default 1).
-	WatermarkOpacity float64
+	// WatermarkOpacity is overlay opacity in [0,1]. Nil means unset (default 1).
+	// Zero is fully transparent.
+	WatermarkOpacity *float64
 
 	// WatermarkScale is watermark width as a fraction of the output image width.
-	// Zero means unset (default 0.2).
-	WatermarkScale float64
+	// Nil means unset (default 0.2). Zero draws no watermark.
+	WatermarkScale *float64
 
 	// WatermarkPadX and WatermarkPadY are edge padding in pixels.
 	WatermarkPadX int
@@ -170,11 +171,11 @@ func (o Options) String() string {
 	if o.WatermarkPos != "" {
 		opts = append(opts, optWatermarkPos+o.WatermarkPos)
 	}
-	if o.WatermarkOpacity != 0 {
-		opts = append(opts, fmt.Sprintf("%s%v", optWatermarkOpacity, o.WatermarkOpacity))
+	if o.WatermarkOpacity != nil {
+		opts = append(opts, fmt.Sprintf("%s%v", optWatermarkOpacity, *o.WatermarkOpacity))
 	}
-	if o.WatermarkScale != 0 {
-		opts = append(opts, fmt.Sprintf("%s%v", optWatermarkScale, o.WatermarkScale))
+	if o.WatermarkScale != nil {
+		opts = append(opts, fmt.Sprintf("%s%v", optWatermarkScale, *o.WatermarkScale))
 	}
 	if o.WatermarkPadX != 0 {
 		opts = append(opts, fmt.Sprintf("%s%d", optWatermarkPadX, o.WatermarkPadX))
@@ -298,8 +299,8 @@ func (o Options) transform() bool {
 //
 //	wmurl{base64url} - watermark image URL (URL-safe base64, no padding)
 //	wmp{pos}         - position: nw, n, ne, w, c, e, sw, s, se (default: se)
-//	wmo{opacity}     - opacity from 0 to 1 (default: 1)
-//	wms{scale}       - watermark width as a fraction of output width (default: 0.2)
+//	wmo{opacity}     - opacity from 0 to 1 (default: 1). 0 is fully transparent
+//	wms{scale}       - watermark width as a fraction of output width, from 0 to 1 (default: 0.2). 0 draws nothing
 //	wmx{n}           - horizontal padding in pixels (default: 0)
 //	wmy{n}           - vertical padding in pixels (default: 0)
 //
@@ -349,10 +350,14 @@ func ParseOptions(str string) Options {
 			options.WatermarkPos = strings.TrimPrefix(opt, optWatermarkPos)
 		case strings.HasPrefix(opt, optWatermarkOpacity):
 			value := strings.TrimPrefix(opt, optWatermarkOpacity)
-			options.WatermarkOpacity, _ = strconv.ParseFloat(value, 64)
+			if v, err := strconv.ParseFloat(value, 64); err == nil {
+				options.WatermarkOpacity = &v
+			}
 		case strings.HasPrefix(opt, optWatermarkScale):
 			value := strings.TrimPrefix(opt, optWatermarkScale)
-			options.WatermarkScale, _ = strconv.ParseFloat(value, 64)
+			if v, err := strconv.ParseFloat(value, 64); err == nil {
+				options.WatermarkScale = &v
+			}
 		case strings.HasPrefix(opt, optWatermarkPadX):
 			value := strings.TrimPrefix(opt, optWatermarkPadX)
 			options.WatermarkPadX, _ = strconv.Atoi(value)

@@ -6,9 +6,12 @@ package imageproxy
 import (
 	"net/http"
 	"net/url"
+	"reflect"
 	"testing"
 	"time"
 )
+
+func f64(v float64) *float64 { return &v }
 
 var emptyOptions = Options{}
 
@@ -38,8 +41,12 @@ func TestOptions_String(t *testing.T) {
 			"0x0,ch400,cw300,cx100,cy200,sc,scaleUp",
 		},
 		{
-			Options{WatermarkURL: "https://example.com/logo.png", WatermarkPos: "se", WatermarkOpacity: 0.5, WatermarkScale: 0.15, WatermarkPadX: 16, WatermarkPadY: 8},
+			Options{WatermarkURL: "https://example.com/logo.png", WatermarkPos: "se", WatermarkOpacity: f64(0.5), WatermarkScale: f64(0.15), WatermarkPadX: 16, WatermarkPadY: 8},
 			"0x0,wmo0.5,wmpse,wms0.15,wmurlaHR0cHM6Ly9leGFtcGxlLmNvbS9sb2dvLnBuZw,wmx16,wmy8",
+		},
+		{
+			Options{WatermarkOpacity: f64(0), WatermarkScale: f64(0)},
+			"0x0,wmo0,wms0",
 		},
 	}
 
@@ -96,13 +103,14 @@ func TestParseOptions(t *testing.T) {
 		// watermark options (wmurl value is URL-safe base64 for https://example.com/logo.png)
 		{"wmurlaHR0cHM6Ly9leGFtcGxlLmNvbS9sb2dvLnBuZw", Options{WatermarkURL: "https://example.com/logo.png"}},
 		{"wmurlaHR0cHM6Ly9leGFtcGxlLmNvbS9sb2dvLnBuZw,wmpse,wmo0.5,wms0.15,wmx16,wmy8", Options{
-			WatermarkURL: "https://example.com/logo.png", WatermarkPos: "se", WatermarkOpacity: 0.5, WatermarkScale: 0.15, WatermarkPadX: 16, WatermarkPadY: 8,
+			WatermarkURL: "https://example.com/logo.png", WatermarkPos: "se", WatermarkOpacity: f64(0.5), WatermarkScale: f64(0.15), WatermarkPadX: 16, WatermarkPadY: 8,
 		}},
-		{"wmpse,wmo0.4,wms0.2,wmx10,wmy10", Options{WatermarkPos: "se", WatermarkOpacity: 0.4, WatermarkScale: 0.2, WatermarkPadX: 10, WatermarkPadY: 10}},
+		{"wmpse,wmo0.4,wms0.2,wmx10,wmy10", Options{WatermarkPos: "se", WatermarkOpacity: f64(0.4), WatermarkScale: f64(0.2), WatermarkPadX: 10, WatermarkPadY: 10}},
+		{"wmo0,wms0", Options{WatermarkOpacity: f64(0), WatermarkScale: f64(0)}},
 	}
 
 	for _, tt := range tests {
-		if got, want := ParseOptions(tt.Input), tt.Options; got != want {
+		if got, want := ParseOptions(tt.Input), tt.Options; !reflect.DeepEqual(got, want) {
 			t.Errorf("ParseOptions(%q) returned %#v, want %#v", tt.Input, got, want)
 		}
 	}

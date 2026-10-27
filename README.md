@@ -52,9 +52,14 @@ because unencoded URLs contain `/` and would break the
 | ------ | ------- | ------- |
 | `wmurl{base64url}` | Watermark image URL (URL-safe base64, no padding) | required |
 | `wmp{pos}` | Position: `nw` `n` `ne` `w` `c` `e` `sw` `s` `se` | `se` |
-| `wmo{0..1}` | Opacity | `1` |
-| `wms{0..1}` | Scale as a fraction of output width | `0.2` |
+| `wmo{0..1}` | Opacity. `0` is fully transparent | `1` |
+| `wms{0..1}` | Scale as a fraction of output width. `0` draws nothing | `0.2` |
 | `wmx{n}` / `wmy{n}` | Edge padding in pixels | `0` |
+
+The watermark host is subject to the same allow and deny lists as the remote
+image. When the proxy requires a signature and the watermark host is not
+covered by an allow list, the signature must cover the options. A signature of
+the remote image alone cannot be reused with a different `wmurl`.
 
 Example (watermark URL `https://example.com/logo.png` encoded as
 `aHR0cHM6Ly9leGFtcGxlLmNvbS9sb2dvLnBuZw`):

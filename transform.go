@@ -336,13 +336,22 @@ func transformImage(m image.Image, opt Options, watermark image.Image) image.Ima
 }
 
 func applyWatermark(m image.Image, watermark image.Image, opt Options) image.Image {
-	opacity := opt.WatermarkOpacity
-	if opacity <= 0 || opacity > 1 {
-		opacity = 1
+	opacity := 1.0
+	if opt.WatermarkOpacity != nil {
+		opacity = *opt.WatermarkOpacity
+		if opacity < 0 || opacity > 1 {
+			opacity = 1
+		}
 	}
-	scale := opt.WatermarkScale
-	if scale <= 0 || scale > 1 {
-		scale = 0.2
+	scale := 0.2
+	if opt.WatermarkScale != nil {
+		scale = *opt.WatermarkScale
+		if scale == 0 {
+			return m
+		}
+		if scale < 0 || scale > 1 {
+			scale = 0.2
+		}
 	}
 
 	bounds := m.Bounds()
